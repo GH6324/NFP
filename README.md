@@ -1,4 +1,5 @@
 *本項目含有AI創作的內容
+> 💡 **提示：** 本分支為 Vercel (Serverless) 版本。在尋找Docker 私有化部署版本？[請點擊這裡](https://github.com/ReiaKurona/NFP-DockerEdition)
 # 🛡️ AeroNode (AeroPanel)-A Nftables Forward Panel
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new)
