@@ -1105,6 +1105,7 @@ function NodesView({ nodes, api, fetchAllData }: any) {
 }
 
 // 規則編輯頁面
+// 規則編輯頁面
 function RulesView({ nodes, allRules, api, fetchAllData }: any) {
   const[selected, setSelected] = useState<string>(nodes[0]?.id || "");
   const[rules, setRules] = useState<any[]>([]);
@@ -1120,11 +1121,11 @@ function RulesView({ nodes, allRules, api, fetchAllData }: any) {
   const [openSelect, setOpenSelect] = useState<'protocol' | 'node' | null>(null);
 
   // 通用對話框狀態 (用於報錯、確認)
-  const [dialog, setDialog] = useState<{ isOpen: boolean, title: string, msg: React.ReactNode, type: 'error'|'info'|'confirm', onConfirm?: ()=>void } | null>(null);
+  const[dialog, setDialog] = useState<{ isOpen: boolean, title: string, msg: React.ReactNode, type: 'error'|'info'|'confirm', onConfirm?: ()=>void } | null>(null);
 
   // 批量導入導出狀態
   const [isBatchOpen, setIsBatchOpen] = useState(false);
-  const[batchText, setBatchText] = useState("");
+  const [batchText, setBatchText] = useState("");
   const[batchMode, setBatchMode] = useState<'import'|'export'>('import');
   const[batchResult, setBatchResult] = useState<{total:number, success:number, fail:number, reasons:string[]}|null>(null);
 
@@ -1458,8 +1459,8 @@ function RulesView({ nodes, allRules, api, fetchAllData }: any) {
                     </div>
                   </div>
                   <div className="flex items-center justify-end gap-2 pt-1">
-                    <motion.button whileTap={{ scale: 0.9 }} onClick={() => handleDiagnose(r)} className="p-2.5 text-blue-500 bg-blue-50 dark:bg-blue-900/20 rounded-xl" title="診斷"><Activity className="w-4 h-4" /></motion.button>
-                    <motion.button whileTap={{ scale: 0.9 }} onClick={() => setEditing({ index: idx, sourceNodeId: selected, rule: { ...r } })} className="p-2.5 bg-[var(--md-primary-container)] text-[var(--md-primary)] rounded-xl"><Edit2 className="w-4 h-4" /></motion.button>
+                    <motion.button whileTap={{ scale: 0.9 }} onClick={() => handleDiagnose(r)} className="p-2.5 text-[var(--md-primary)] bg-[var(--md-primary-container)] dark:bg-[var(--md-primary-container)] rounded-xl" title="診斷"><Activity className="w-4 h-4" /></motion.button>
+                    <motion.button whileTap={{ scale: 0.9 }} onClick={() => setEditing({ index: idx, sourceNodeId: selected, rule: { ...r } })} className="p-2.5 bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300 rounded-xl"><Edit2 className="w-4 h-4" /></motion.button>
                     <motion.button whileTap={{ scale: 0.9 }} onClick={() => confirmDelete(idx)} className="p-2.5 bg-red-50 text-red-500 dark:bg-red-900/20 rounded-xl"><Trash2 className="w-4 h-4" /></motion.button>
                   </div>
                 </div>
@@ -1486,8 +1487,8 @@ function RulesView({ nodes, allRules, api, fetchAllData }: any) {
                         <td className="p-4 text-gray-600 dark:text-gray-300">{r.dest_ip}:{r.dest_port}</td>
                         <td className="p-4"><span className="px-2 py-1 rounded-md bg-[#F0F4EF] dark:bg-[#202522] text-xs font-sans font-bold uppercase">{r.protocol}</span></td>
                         <td className="p-4 flex justify-end gap-2">
-                           <motion.button whileTap={{ scale: 0.9 }} onClick={() => handleDiagnose(r)} className="p-2 text-blue-500 bg-blue-50 dark:bg-blue-900/20 rounded-lg"><Activity className="w-4 h-4" /></motion.button>
-                           <motion.button whileTap={{ scale: 0.9 }} onClick={() => setEditing({ index: idx, sourceNodeId: selected, rule: { ...r } })} className="p-2 bg-[var(--md-primary-container)] text-[var(--md-primary)] rounded-lg"><Edit2 className="w-4 h-4" /></motion.button>
+                           <motion.button whileTap={{ scale: 0.9 }} onClick={() => handleDiagnose(r)} className="p-2 text-[var(--md-primary)] bg-[var(--md-primary-container)] rounded-lg"><Activity className="w-4 h-4" /></motion.button>
+                           <motion.button whileTap={{ scale: 0.9 }} onClick={() => setEditing({ index: idx, sourceNodeId: selected, rule: { ...r } })} className="p-2 bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300 rounded-lg"><Edit2 className="w-4 h-4" /></motion.button>
                            <motion.button whileTap={{ scale: 0.9 }} onClick={() => confirmDelete(idx)} className="p-2 bg-red-50 text-red-500 dark:bg-red-900/20 rounded-lg"><Trash2 className="w-4 h-4" /></motion.button>
                         </td>
                       </tr>
@@ -1581,7 +1582,7 @@ function RulesView({ nodes, allRules, api, fetchAllData }: any) {
 
               <div className="p-6 pt-4 border-t border-gray-100 dark:border-white/5 flex gap-3 shrink-0">
                 <button onClick={() => setEditing(null)} disabled={isSaving} className="flex-1 py-3.5 rounded-full font-bold bg-[#F0F4EF] dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors disabled:opacity-50 text-gray-700 dark:text-gray-300">取消</button>
-                <button onClick={handleSave} disabled={isSaving} className="flex-1 py-3.5 rounded-full font-bold bg-[#0061A4] dark:bg-[#80CFFF] text-white dark:text-[#003258] hover:opacity-90 transition-opacity flex justify-center items-center gap-2 disabled:opacity-70">
+                <button onClick={handleSave} disabled={isSaving} className="flex-1 py-3.5 rounded-full font-bold bg-[var(--md-primary)] text-[var(--md-on-primary)] hover:opacity-90 transition-opacity flex justify-center items-center gap-2 disabled:opacity-70">
                   {isSaving ? <RefreshCw className="w-5 h-5 animate-spin" /> : "保存規則"}
                 </button>
               </div>
@@ -1620,7 +1621,7 @@ function RulesView({ nodes, allRules, api, fetchAllData }: any) {
                   </div>
                 ) : (
                   <>
-                    <div className="flex items-start gap-2 text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/10 p-4 rounded-[20px] font-bold">
+                    <div className="flex items-start gap-2 text-sm text-[var(--md-primary)] bg-[var(--md-primary-container)] p-4 rounded-[20px] font-bold">
                       <Info className="w-5 h-5 shrink-0 mt-0.5" />
                       <div>格式：自定義名稱(可選) 原端口或區間|目標IP|目標端口|協議。<br/>每行一條，例如：<br/><span className="font-mono bg-white/50 dark:bg-black/20 px-1 rounded">MyWeb 80|192.168.1.2|8080|tcp</span></div>
                     </div>
@@ -1648,121 +1649,109 @@ function RulesView({ nodes, allRules, api, fetchAllData }: any) {
         )}
       </AnimatePresence>
 
-      {/* 診斷視窗 (自適應與深淺色模式相容) */}
+      {/* 診斷視窗 (完美適配深/淺色模式，小螢幕全螢幕防止底欄遮擋) */}
       <AnimatePresence>
         {diagState.isOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center md:p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setDiagState(p => ({...p, isOpen: false}))} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-            
-            {/* 使用 h-[100dvh] md:h-auto 實現小螢幕全螢幕，大螢幕彈窗，flex-col 讓內部可以滾動不被遮擋 */}
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }} 
-              animate={{ opacity: 1, scale: 1, y: 0 }} 
-              exit={{ opacity: 0, scale: 0.95, y: 20 }} 
-              className="relative w-full h-[100dvh] md:h-auto md:max-h-[90vh] max-w-4xl bg-white dark:bg-[#1A1E29] rounded-none md:rounded-[32px] shadow-2xl flex flex-col overflow-hidden border-0 md:border md:border-gray-200 dark:md:border-white/10"
-            >
+          <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center md:p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setDiagState(p => ({...p, isOpen: false}))} />
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full h-[100dvh] md:h-auto md:max-h-[90vh] md:max-w-4xl bg-white dark:bg-[#1A1E29] text-gray-900 dark:text-gray-200 rounded-none md:rounded-[32px] shadow-2xl overflow-hidden border-0 md:border border-gray-200 dark:border-white/10 flex flex-col">
               
-              {/* Header */}
-              <div className="p-4 sm:p-5 border-b border-gray-100 dark:border-white/10 flex justify-between items-center bg-gray-50 dark:bg-[#151922] shrink-0">
+              <div className="p-4 md:p-6 border-b border-gray-100 dark:border-white/10 flex justify-between items-center bg-gray-50 dark:bg-[#151922] shrink-0">
                 <div>
                   <h3 className="text-lg font-bold text-gray-900 dark:text-white">轉發診斷結果</h3>
                   <span className="text-sm text-gray-500 dark:text-gray-400">{diagState.rule?.name || diagState.rule?.listen_port}</span>
                 </div>
-                <div className="bg-[var(--md-primary-container)] text-[var(--md-primary)] px-3 py-1 rounded-full text-xs font-bold">轉發服務</div>
+                <div className="bg-[var(--md-primary-container)] text-[var(--md-primary)] px-4 py-1.5 rounded-full text-xs font-bold border border-[var(--md-primary)]/10">轉發服務</div>
               </div>
 
-              {/* Scrollable Body */}
-              <div className="flex-1 overflow-y-auto hide-scrollbar">
-                {diagState.step === 'input' && (
-                  <div className="p-8 h-full flex flex-col items-center justify-center space-y-6">
-                    <div className="text-center space-y-2">
-                      <h2 className="text-xl font-bold text-gray-900 dark:text-white">輸入檢測端口</h2>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">這是一個端口區間規則 ({diagState.rule.listen_port})，請輸入要測試的具體端口。</p>
+              {diagState.step === 'input' && (
+                <div className="p-6 md:p-8 flex-1 flex flex-col items-center justify-center space-y-8 overflow-y-auto">
+                  <div className="text-center space-y-3">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">輸入檢測端口</h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">這是一個端口區間規則 ({diagState.rule.listen_port})，請輸入要測試的具體端口。</p>
+                  </div>
+                  <input type="number" value={diagState.specificPort} onChange={e => setDiagState({ ...diagState, specificPort: e.target.value })} className="w-full max-w-[280px] bg-gray-100 dark:bg-[#0F1219] border border-gray-200 dark:border-white/10 p-5 rounded-[20px] text-center font-mono text-2xl text-gray-900 dark:text-white outline-none focus:ring-2 ring-[var(--md-primary)] transition-all shadow-inner" placeholder="端口號" />
+                  <div className="flex gap-4 w-full max-w-[280px]">
+                    <button onClick={() => setDiagState(p => ({...p, isOpen: false}))} className="flex-1 py-3.5 rounded-full font-bold bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-gray-700 dark:text-gray-300">取消</button>
+                    <button onClick={() => runDiagnostic(diagState.rule, diagState.specificPort)} className="flex-1 py-3.5 rounded-full font-bold bg-[var(--md-primary)] text-[var(--md-on-primary)] hover:opacity-90 transition-opacity">開始診斷</button>
+                  </div>
+                </div>
+              )}
+
+              {(diagState.step === 'testing' || diagState.step === 'result') && (
+                <div className="p-4 md:p-6 space-y-4 md:space-y-6 flex-1 overflow-y-auto bg-white dark:bg-[#1A1E29]">
+                  {/* 頂部三個數據卡片 */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
+                    <div className="bg-gray-50 dark:bg-[#222736] border border-gray-100 dark:border-white/5 rounded-[24px] p-5 flex flex-col items-center justify-center gap-2">
+                       <span className="text-3xl font-black text-gray-900 dark:text-white">{diagState.resultData?.total || "-"}</span>
+                       <span className="text-xs text-gray-500 dark:text-gray-400 font-bold">總測試數</span>
                     </div>
-                    <input type="number" value={diagState.specificPort} onChange={e => setDiagState({ ...diagState, specificPort: e.target.value })} className="w-64 bg-gray-100 dark:bg-[#0F1219] border border-transparent dark:border-white/10 p-4 rounded-[16px] text-center font-mono text-xl text-gray-900 dark:text-white outline-none focus:border-[var(--md-primary)] focus:ring-2 ring-[var(--md-primary)] transition-all" placeholder="端口號" />
-                    <div className="flex gap-4">
-                      <button onClick={() => setDiagState(p => ({...p, isOpen: false}))} className="px-6 py-2.5 rounded-full font-bold bg-[#F0F4EF] dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 transition-colors">取消</button>
-                      <button onClick={() => runDiagnostic(diagState.rule, diagState.specificPort)} className="px-6 py-2.5 rounded-full font-bold bg-[var(--md-primary)] text-[var(--md-on-primary)] hover:opacity-90 transition-opacity">開始診斷</button>
+                    <div className="bg-green-50 dark:bg-[#1A3326] border border-green-200 dark:border-green-500/20 rounded-[24px] p-5 flex flex-col items-center justify-center gap-2">
+                       <span className="text-3xl font-black text-green-600 dark:text-green-400">{diagState.resultData?.success || "-"}</span>
+                       <span className="text-xs text-green-600/70 dark:text-green-500/70 font-bold">成功</span>
+                    </div>
+                    <div className="bg-red-50 dark:bg-[#3A1E22] border border-red-200 dark:border-red-500/20 rounded-[24px] p-5 flex flex-col items-center justify-center gap-2">
+                       <span className="text-3xl font-black text-red-600 dark:text-red-400">{diagState.resultData?.fail || "-"}</span>
+                       <span className="text-xs text-red-600/70 dark:text-red-500/70 font-bold">失敗</span>
                     </div>
                   </div>
-                )}
 
-                {(diagState.step === 'testing' || diagState.step === 'result') && (
-                  <div className="p-4 sm:p-6 space-y-4">
-                    {/* 頂部三個數據卡片 */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="bg-[#F0F4EF] dark:bg-[#222736] border border-gray-200 dark:border-white/5 rounded-[20px] p-5 flex flex-col items-center justify-center gap-1">
-                         <span className="text-3xl font-black text-gray-800 dark:text-white">{diagState.resultData?.total || "-"}</span>
-                         <span className="text-xs text-gray-500 dark:text-gray-400 font-bold">總測試數</span>
-                      </div>
-                      <div className="bg-green-50 dark:bg-[#1A3326] border border-green-200 dark:border-green-500/20 rounded-[20px] p-5 flex flex-col items-center justify-center gap-1">
-                         <span className="text-3xl font-black text-green-600 dark:text-green-400">{diagState.resultData?.success || "-"}</span>
-                         <span className="text-xs text-green-600/80 dark:text-green-500/70 font-bold">成功</span>
-                      </div>
-                      <div className="bg-red-50 dark:bg-[#3A1E22] border border-red-200 dark:border-red-500/20 rounded-[20px] p-5 flex flex-col items-center justify-center gap-1">
-                         <span className="text-3xl font-black text-red-500 dark:text-red-400">{diagState.resultData?.fail || "-"}</span>
-                         <span className="text-xs text-red-500/80 dark:text-red-500/70 font-bold">失敗</span>
-                      </div>
+                  {/* 提示信息 */}
+                  <div className="bg-[var(--md-primary-container)]/30 dark:bg-[#222736] border border-[var(--md-primary)]/20 dark:border-white/5 rounded-[24px] p-4 flex items-start gap-3 text-sm text-gray-700 dark:text-gray-400">
+                    <Info className="w-5 h-5 shrink-0 text-[var(--md-primary)] dark:text-blue-400 mt-0.5" />
+                    <span className="leading-relaxed font-medium">由於面板為被動模式，規則創建後請等大約 30 秒 agent 獲取生效。<br/>TCP ping 當出口沒有部署服務時顯示超時為正常現象。</span>
+                  </div>
+
+                  {/* 表格區域 */}
+                  <div className="bg-white dark:bg-[#222736] border border-gray-200 dark:border-white/5 rounded-[24px] overflow-hidden shadow-sm">
+                    <div className="bg-gray-50 dark:bg-[#293042] px-5 py-3 flex items-center gap-2 border-b border-gray-200 dark:border-white/5">
+                      <div className="w-1.5 h-4 bg-[var(--md-primary)] rounded-full"></div>
+                      <span className="text-sm font-bold text-gray-800 dark:text-blue-300">入口測試</span>
                     </div>
-
-                    {/* 提示信息 */}
-                    <div className="bg-blue-50 dark:bg-[#222736] border border-blue-100 dark:border-white/5 rounded-[20px] p-4 flex items-start gap-3 text-sm text-blue-800 dark:text-gray-400">
-                      <Info className="w-5 h-5 shrink-0 text-[var(--md-primary)] dark:text-blue-400 mt-0.5" />
-                      <span className="leading-relaxed">由於面板為被動模式，規則創建後請等大約 30 秒 agent 獲取生效。<br/>TCP ping 當出口沒有部署服務時顯示超時為正常現象。</span>
-                    </div>
-
-                    {/* 表格區域 */}
-                    <div className="bg-white dark:bg-[#222736] border border-gray-200 dark:border-white/5 rounded-[20px] overflow-hidden shadow-sm">
-                      <div className="bg-gray-50 dark:bg-[#293042] px-5 py-3 flex items-center gap-2 border-b border-gray-100 dark:border-white/5">
-                        <div className="w-1.5 h-4 bg-orange-500 rounded-full"></div>
-                        <span className="text-sm font-bold text-gray-700 dark:text-blue-300">入口測試</span>
-                      </div>
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm whitespace-nowrap">
-                          <thead className="text-gray-500 dark:text-gray-400 font-bold border-b border-gray-100 dark:border-white/5">
-                            <tr>
-                              <th className="p-4">路徑</th>
-                              <th className="p-4 text-center">狀態</th>
-                              <th className="p-4 text-center">延遲(ms)</th>
-                              <th className="p-4 text-center">丟包率</th>
-                              <th className="p-4 text-center">質量</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {diagState.step === 'testing' ? (
-                              <tr><td colSpan={5} className="p-8 text-center text-gray-500 flex justify-center items-center gap-2"><RefreshCw className="w-5 h-5 animate-spin"/> 正在診斷中...</td></tr>
-                            ) : (
-                              <tr className="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
-                                <td className="p-4">
-                                  <div className="flex items-center gap-2">
-                                    <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
-                                    <div className="flex flex-col">
-                                      <span className="text-gray-800 dark:text-gray-200 font-bold">{diagState.resultData.path}</span>
-                                      <span className="text-xs text-gray-500 font-mono mt-0.5">{diagState.rule.dest_ip}:{diagState.rule.dest_port}</span>
-                                    </div>
+                    <div className="overflow-x-auto hide-scrollbar">
+                      <table className="w-full text-left text-sm whitespace-nowrap">
+                        <thead className="text-gray-500 dark:text-gray-400 font-bold border-b border-gray-100 dark:border-white/5">
+                          <tr>
+                            <th className="p-4">路徑</th>
+                            <th className="p-4 text-center">狀態</th>
+                            <th className="p-4 text-center">延遲(ms)</th>
+                            <th className="p-4 text-center">丟包率</th>
+                            <th className="p-4 text-center">質量</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50 dark:divide-white/5">
+                          {diagState.step === 'testing' ? (
+                            <tr><td colSpan={5} className="p-10 text-center text-[var(--md-primary)] dark:text-gray-500 flex justify-center items-center gap-3 font-bold"><RefreshCw className="w-5 h-5 animate-spin"/> 正在診斷中...</td></tr>
+                          ) : (
+                            <tr className="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                              <td className="p-4">
+                                <div className="flex items-center gap-3">
+                                  <CheckCircle2 className={`w-5 h-5 shrink-0 ${diagState.resultData.status==='成功' ? 'text-green-500' : 'text-red-500'}`} />
+                                  <div className="flex flex-col">
+                                    <span className="text-gray-900 dark:text-gray-200 font-bold">{diagState.resultData.path}</span>
+                                    <span className="text-xs text-gray-500 font-mono mt-0.5">{diagState.rule.dest_ip}:{diagState.rule.dest_port}</span>
                                   </div>
-                                </td>
-                                <td className="p-4 text-center">
-                                  <span className="px-3 py-1.5 rounded-full bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400 text-xs font-bold inline-block">{diagState.resultData.status}</span>
-                                </td>
-                                <td className="p-4 text-center font-mono text-[var(--md-primary)] dark:text-blue-400 font-bold">{diagState.resultData.latency}</td>
-                                <td className="p-4 text-center font-mono text-green-600 dark:text-green-400 font-bold">{diagState.resultData.loss}</td>
-                                <td className="p-4 text-center">
-                                  <span className="px-3 py-1.5 rounded-full bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400 text-xs font-bold flex items-center justify-center gap-1 mx-auto w-fit">✨ {diagState.resultData.quality}</span>
-                                </td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
+                                </div>
+                              </td>
+                              <td className="p-4 text-center">
+                                <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${diagState.resultData.status==='成功' ? 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400'}`}>{diagState.resultData.status}</span>
+                              </td>
+                              <td className={`p-4 text-center font-mono font-bold ${diagState.resultData.status==='成功' ? 'text-[var(--md-primary)] dark:text-blue-400' : 'text-gray-400'}`}>{diagState.resultData.latency}</td>
+                              <td className={`p-4 text-center font-mono font-bold ${diagState.resultData.status==='成功' ? 'text-green-600 dark:text-green-400' : 'text-gray-400'}`}>{diagState.resultData.loss}</td>
+                              <td className="p-4 text-center">
+                                <span className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center justify-center gap-1 mx-auto w-fit ${diagState.resultData.status==='成功' ? 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400' : 'bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-gray-400'}`}>{diagState.resultData.status==='成功'?'✨ ':''}{diagState.resultData.quality}</span>
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
 
-              {/* Footer */}
-              <div className="p-4 sm:p-5 border-t border-gray-100 dark:border-white/10 flex justify-end gap-3 bg-gray-50 dark:bg-[#151922] shrink-0">
-                <button onClick={() => setDiagState(p => ({...p, isOpen: false}))} className="px-6 py-2.5 rounded-full font-bold bg-white dark:bg-[#2A2F3C] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/5 border border-gray-200 dark:border-transparent transition-colors">關閉</button>
+              <div className="p-4 md:p-6 border-t border-gray-100 dark:border-white/10 flex justify-end gap-3 bg-gray-50 dark:bg-[#151922] shrink-0 safe-area-pb">
+                <button onClick={() => setDiagState(p => ({...p, isOpen: false}))} className="px-6 py-2.5 rounded-full font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors">關閉</button>
                 <button onClick={() => runDiagnostic(diagState.rule, diagState.specificPort)} disabled={diagState.step === 'testing'} className="px-6 py-2.5 rounded-full font-bold bg-[var(--md-primary)] text-[var(--md-on-primary)] hover:opacity-90 transition-opacity disabled:opacity-50">重新診斷</button>
               </div>
             </motion.div>
