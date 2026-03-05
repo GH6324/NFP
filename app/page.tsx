@@ -27,6 +27,8 @@ const MdTonalButton = 'md-filled-tonal-button' as any;   // 色调按钮 (报错
 const MdOutlinedButton = 'md-outlined-button' as any;    // 描边按钮
 const MdIcon = 'md-icon' as any;                         // 图标容器
 const MdIconButton = 'md-icon-button' as any;            // 图标按钮
+const MdFab = 'md-fab' as any;
+const MdRipple = 'md-ripple' as any;
 
 export default function App() {
   const [auth, setAuth] = useState<string | null>(null);
@@ -222,13 +224,7 @@ function NavItem({ icon, label, active, onClick }: any) {
 }
 
 // 通用 MD3 风格弹窗组件
-// 👇 终极黑科技：将 Web Component 标签转义为 any 类型的 React 变量。
-// 它底层完全等同于直接写 <md-icon-button>，但彻底屏蔽了 TypeScript 报错，不需要任何额外配置！
-const MdIconButton = 'md-icon-button' as any;
-const MdIcon = 'md-icon' as any;
-const MdFab = 'md-fab' as any;
-const MdRipple = 'md-ripple' as any;
-const MdFilledButton = 'md-filled-button' as any;
+
 
 function AlertDialog({ open, title, content, type = "error", onConfirm, onCancel }: any) {
   if (!open) return null;
