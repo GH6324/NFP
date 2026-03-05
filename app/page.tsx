@@ -1850,6 +1850,14 @@ function RulesView({ nodes, allRules, api, fetchAllData }: any) {
   );
 }
 //设置页面
+interface DialogState {
+  open: boolean;
+  title: string;
+  content: string;
+  type: "error" | "success";
+  onConfirm: () => void;
+  onCancel?: () => void; // 可选属性，解决 TS 报错的关键
+}
 function MeView({ setThemeKey, themeKey, setAuth, api, fetchAllData, THEMES }: any) {
   const [pwd, setPwd] = useState("");
   const [confirmPwd, setConfirmPwd] = useState("");
