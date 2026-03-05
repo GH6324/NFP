@@ -21,6 +21,12 @@ const THEMES = {
   lavender:{ primary: "#6750A4", onPrimary: "#FFFFFF", primaryContainer: "#EADDFF", onPrimaryContainer: "#21005D" },
   rose:    { primary: "#9C4146", onPrimary: "#FFFFFF", primaryContainer: "#FFDADA", onPrimaryContainer: "#40000A" }
 };
+//一些MD3支持
+const MdFilledButton = 'md-filled-button' as any;        // 实心按钮
+const MdTonalButton = 'md-filled-tonal-button' as any;   // 色调按钮 (报错就是缺这行)
+const MdOutlinedButton = 'md-outlined-button' as any;    // 描边按钮
+const MdIcon = 'md-icon' as any;                         // 图标容器
+const MdIconButton = 'md-icon-button' as any;            // 图标按钮
 
 export default function App() {
   const [auth, setAuth] = useState<string | null>(null);
