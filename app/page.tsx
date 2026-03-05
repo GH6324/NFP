@@ -1852,37 +1852,30 @@ function RulesView({ nodes, allRules, api, fetchAllData }: any) {
 //设置页面
 function MeView({ setThemeKey, themeKey, setAuth, api, fetchAllData, THEMES }: any) {
   const [pwd, setPwd] = useState("");
-  const [confirmPwd, setConfirmPwd] = useState(""); // 新增：确认密码
-  
-  // 统一弹窗状态
+  const [confirmPwd, setConfirmPwd] = useState("");
+
+  // 弹窗状态管理
   const [dialog, setDialog] = useState({
     open: false, title: "", content: "", type: "success", onConfirm: () => {}, onCancel: undefined as any
   });
   const closeDialog = () => setDialog(prev => ({ ...prev, open: false }));
 
-  // --- 逻辑处理区域 ---
-
-  // 1. 修改密码逻辑
+  // --- 业务逻辑 ---
+  
   const handlePasswordChange = async () => {
-    if (pwd.length < 6) {
-      setDialog({ open: true, title: "密碼太短", content: "為了安全起見，密碼長度至少需要 6 位。", type: "error", onConfirm: closeDialog, onCancel: undefined });
-      return;
-    }
-    if (pwd !== confirmPwd) {
-      setDialog({ open: true, title: "密碼不一致", content: "兩次輸入的密碼不匹配，請重新輸入。", type: "error", onConfirm: closeDialog, onCancel: undefined });
-      return;
-    }
+    if (pwd.length < 6) return setDialog({ open: true, title: "密碼太短", content: "密碼長度不能少於 6 位", type: "error", onConfirm: closeDialog });
+    if (pwd !== confirmPwd) return setDialog({ open: true, title: "密碼不一致", content: "兩次輸入的密碼不匹配", type: "error", onConfirm: closeDialog });
+    
     try {
       const res = await api("CHANGE_PASSWORD", { newPassword: pwd });
       setAuth(res.token);
       localStorage.setItem("aero_auth", res.token);
-      setDialog({ open: true, title: "修改成功", content: "您的登錄密碼已更新，請使用新密碼登錄。", type: "success", onConfirm: () => { closeDialog(); setPwd(""); setConfirmPwd(""); }, onCancel: undefined });
-    } catch (e) {
-      setDialog({ open: true, title: "修改失敗", content: "服務器拒絕了請求，請稍後重試。", type: "error", onConfirm: closeDialog, onCancel: undefined });
+      setDialog({ open: true, title: "修改成功", content: "密碼已更新，請使用新密碼登錄", type: "success", onConfirm: () => { closeDialog(); setPwd(""); setConfirmPwd(""); } });
+    } catch {
+      setDialog({ open: true, title: "修改失敗", content: "網絡錯誤或請求被拒絕", type: "error", onConfirm: closeDialog });
     }
   };
 
-  // 2. 导出逻辑
   const handleExport = async () => {
     const data = await api("EXPORT_ALL");
     const a = document.createElement('a');
@@ -1891,17 +1884,13 @@ function MeView({ setThemeKey, themeKey, setAuth, api, fetchAllData, THEMES }: a
     a.click();
   };
 
-  // 3. 导入逻辑 (带二次确认)
   const handleImportTrigger = (e: any) => {
     const file = e.target.files[0];
     if (!file) return;
-    e.target.value = null; // 重置 input
-    
+    e.target.value = null; 
+
     setDialog({
-      open: true,
-      title: "確認導入？",
-      content: "導入備份將覆蓋當前所有面板設置和數據，且無法撤銷。是否繼續？",
-      type: "error", // 警告风格
+      open: true, title: "危險操作", content: "導入操作將覆蓋現有所有配置，且無法撤銷。確定要繼續嗎？", type: "error",
       onCancel: closeDialog,
       onConfirm: () => {
         closeDialog();
@@ -1910,9 +1899,9 @@ function MeView({ setThemeKey, themeKey, setAuth, api, fetchAllData, THEMES }: a
           try {
             await api("IMPORT_ALL", { backupData: JSON.parse(ev.target.result) });
             fetchAllData();
-            setDialog({ open: true, title: "導入完成", content: "數據已成功恢復。", type: "success", onConfirm: closeDialog, onCancel: undefined });
+            setDialog({ open: true, title: "導入成功", content: "面板數據已恢復", type: "success", onConfirm: closeDialog });
           } catch {
-            setDialog({ open: true, title: "文件錯誤", content: "無法解析該 JSON 文件，請檢查文件格式。", type: "error", onConfirm: closeDialog, onCancel: undefined });
+            setDialog({ open: true, title: "文件錯誤", content: "無法解析 JSON 文件", type: "error", onConfirm: closeDialog });
           }
         };
         reader.readAsText(file);
@@ -1920,120 +1909,99 @@ function MeView({ setThemeKey, themeKey, setAuth, api, fetchAllData, THEMES }: a
     });
   };
 
-  // 4. 退出登录 (带二次确认)
   const handleLogout = () => {
     setDialog({
-      open: true,
-      title: "退出登錄",
-      content: "您確定要退出當前帳戶嗎？",
-      type: "error",
+      open: true, title: "確認退出", content: "您確定要退出當前登錄嗎？", type: "error",
       onCancel: closeDialog,
-      onConfirm: () => {
-        closeDialog();
-        localStorage.removeItem("aero_auth");
-        setAuth(null);
-      }
+      onConfirm: () => { closeDialog(); localStorage.removeItem("aero_auth"); setAuth(null); }
     });
   };
 
   return (
     <>
-      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="space-y-6">
         
-        {/* --- 模块 1: 密码修改 --- */}
-        <div className="bg-[#F0F4EF] dark:bg-[#202522] p-6 rounded-[32px] shadow-sm">
-          <h3 className="font-bold flex items-center gap-2 mb-4 text-lg text-[var(--md-sys-color-on-surface)]">
+        {/* 1. 密码修改 */}
+        <div className="bg-[#F0F4EF] dark:bg-[#202522] p-6 rounded-[32px] space-y-4">
+          <h3 className="font-bold flex items-center gap-2 text-[var(--md-sys-color-on-surface)]">
             <KeyRound className="w-5 h-5 text-[var(--md-sys-color-primary)]"/> 登錄密碼修改
           </h3>
-          <div className="flex flex-col gap-4">
-            {/* 使用标准 Input 但配合 MD3 风格的 Focus 样式 */}
-            <input 
-              type="password" placeholder="輸入新密碼" value={pwd} onChange={e=>setPwd(e.target.value)} 
-              className="bg-white dark:bg-[#111318] p-4 rounded-2xl outline-none border-2 border-transparent focus:border-[var(--md-sys-color-primary)] transition-all" 
-            />
-            <input 
-              type="password" placeholder="確認新密碼" value={confirmPwd} onChange={e=>setConfirmPwd(e.target.value)} 
-              className="bg-white dark:bg-[#111318] p-4 rounded-2xl outline-none border-2 border-transparent focus:border-[var(--md-sys-color-primary)] transition-all" 
-            />
-            <div className="flex justify-end">
+          <div className="flex flex-col gap-3">
+            <input type="password" placeholder="輸入新密碼" value={pwd} onChange={e=>setPwd(e.target.value)} className="bg-white dark:bg-[#111318] p-4 rounded-2xl outline-none focus:ring-2 focus:ring-[var(--md-sys-color-primary)] transition-all" />
+            <input type="password" placeholder="確認新密碼" value={confirmPwd} onChange={e=>setConfirmPwd(e.target.value)} className="bg-white dark:bg-[#111318] p-4 rounded-2xl outline-none focus:ring-2 focus:ring-[var(--md-sys-color-primary)] transition-all" />
+            <div className="flex justify-end pt-2">
               {/* @ts-ignore */}
               <MdFilledButton onClick={handlePasswordChange}>
-                确认修改
-                <Save slot="icon" className="w-4 h-4" />
+                 修改密碼 <Save slot="icon" className="w-4 h-4"/>
               </MdFilledButton>
             </div>
           </div>
         </div>
 
-        {/* --- 模块 2: 备份与还原 --- */}
-        <div className="bg-[#F0F4EF] dark:bg-[#202522] p-6 rounded-[32px] shadow-sm">
-          <h3 className="font-bold flex items-center gap-2 mb-4 text-lg text-[var(--md-sys-color-on-surface)]">
+        {/* 2. 备份还原 */}
+        <div className="bg-[#F0F4EF] dark:bg-[#202522] p-6 rounded-[32px] space-y-4">
+          <h3 className="font-bold flex items-center gap-2 text-[var(--md-sys-color-on-surface)]">
             <Save className="w-5 h-5 text-[var(--md-sys-color-primary)]"/> 備份與還原
           </h3>
-          <div className="flex gap-4">
+          <div className="flex gap-3">
             <div className="flex-1">
               {/* @ts-ignore */}
-              <MdFilledTonalButton onClick={handleExport} style={{width: '100%'}}>
-                <Download slot="icon" className="w-4 h-4" />
-                導出 JSON
-              </MdFilledTonalButton>
+              <MdTonalButton onClick={handleExport} style={{width: '100%'}}>
+                <Download slot="icon" className="w-4 h-4" /> 導出 JSON
+              </MdTonalButton>
             </div>
-            
             <div className="flex-1 relative">
-               {/* 这里的 input 需要隐藏，通过点击按钮触发 */}
-              <input type="file" accept=".json" className="hidden" id="import-file" onChange={handleImportTrigger} />
+              <input type="file" id="json_upload" accept=".json" className="hidden" onChange={handleImportTrigger} />
               {/* @ts-ignore */}
-              <MdFilledTonalButton onClick={()=>document.getElementById('import-file')?.click()} style={{width: '100%'}}>
-                <Upload slot="icon" className="w-4 h-4" />
-                導入 JSON
-              </MdFilledTonalButton>
+              <MdTonalButton onClick={()=>document.getElementById('json_upload')?.click()} style={{width: '100%'}}>
+                <Upload slot="icon" className="w-4 h-4" /> 導入 JSON
+              </MdTonalButton>
             </div>
           </div>
         </div>
 
-        {/* --- 模块 3: 主题配色 (修复丢失问题) --- */}
-        <div className="bg-[#F0F4EF] dark:bg-[#202522] p-6 rounded-[32px] shadow-sm">
-          <h3 className="font-bold flex items-center gap-2 mb-4 text-lg text-[var(--md-sys-color-on-surface)]">
+        {/* 3. 主题配色 (修复核心：直接处理 Object.entries 且增加 md-ripple) */}
+        <div className="bg-[#F0F4EF] dark:bg-[#202522] p-6 rounded-[32px] space-y-4">
+          <h3 className="font-bold flex items-center gap-2 text-[var(--md-sys-color-on-surface)]">
             <Palette className="w-5 h-5 text-[var(--md-sys-color-primary)]"/> 面板主題配色
           </h3>
-          <div className="grid grid-cols-4 sm:grid-cols-6 gap-4">
-            {THEMES && Object.entries(THEMES).map(([key, colors]: any) => {
-              const isActive = themeKey === key;
-              return (
-                <div 
-                  key={key}
-                  onClick={() => setThemeKey(key)}
-                  className={`relative h-14 rounded-2xl cursor-pointer overflow-hidden transition-all duration-300 ${isActive ? 'ring-4 ring-offset-2 ring-[var(--md-sys-color-primary)] dark:ring-offset-[#202522]' : 'hover:scale-105'}`}
-                  style={{ backgroundColor: colors.primary }}
-                >
-                  {/* 使用 md-ripple 实现点击水波纹 */}
-                  {/* @ts-ignore */}
-                  <MdRipple></MdRipple>
-                  
-                  {/* 选中时的对钩图标 */}
-                  {isActive && (
-                    <div className="absolute inset-0 flex items-center justify-center text-white drop-shadow-md">
-                      <CheckCircle2 className="w-6 h-6" />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+          {/* 增加容错检查，防止 THEMES 为空导致界面空白 */}
+          <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+            {THEMES && Object.entries(THEMES).map(([key, colors]: any) => (
+              <div 
+                key={key} 
+                onClick={() => setThemeKey(key)} 
+                className={`
+                  relative h-12 rounded-2xl cursor-pointer overflow-hidden transition-all duration-200 
+                  ${themeKey === key ? 'ring-4 ring-offset-2 ring-[var(--md-sys-color-primary)] dark:ring-offset-[#202522] scale-105' : 'hover:scale-95'}
+                `}
+                style={{ backgroundColor: colors.primary, borderColor: colors.primaryContainer }}
+              >
+                {/* 这里的 MdRipple 提供了点击波纹效果，且不需要改变你原有的 DOM 结构 */}
+                {/* @ts-ignore */}
+                <MdRipple />
+                
+                {themeKey === key && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <CheckCircle2 className="w-6 h-6 text-white drop-shadow-md" />
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* --- 模块 4: 退出登录 --- */}
-        <div className="pt-4">
+        {/* 4. 退出登录 */}
+        <div className="pt-2">
           {/* @ts-ignore */}
-          <MdFilledButton onClick={handleLogout} style={{width: '100%', '--md-sys-color-primary': '#b91c1c', '--md-sys-color-on-primary': '#ffffff'}}>
-            <LogOut slot="icon" className="w-4 h-4"/>
-            退出當前帳戶
+          <MdFilledButton onClick={handleLogout} style={{width: '100%', '--md-sys-color-primary': '#ef4444', '--md-sys-color-on-primary': '#ffffff'}}>
+            <LogOut slot="icon" className="w-4 h-4" /> 退出登錄
           </MdFilledButton>
         </div>
 
       </div>
 
-      {/* 全局弹窗挂载 */}
+      {/* 挂载全局弹窗 */}
       <AlertDialog {...dialog} />
     </>
   );
