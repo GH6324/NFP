@@ -216,6 +216,14 @@ function NavItem({ icon, label, active, onClick }: any) {
 }
 
 // 通用 MD3 风格弹窗组件
+// 👇 终极黑科技：将 Web Component 标签转义为 any 类型的 React 变量。
+// 它底层完全等同于直接写 <md-icon-button>，但彻底屏蔽了 TypeScript 报错，不需要任何额外配置！
+const MdIconButton = 'md-icon-button' as any;
+const MdIcon = 'md-icon' as any;
+const MdFab = 'md-fab' as any;
+const MdRipple = 'md-ripple' as any;
+const MdFilledButton = 'md-filled-button' as any;
+
 function AlertDialog({ open, title, content, type = "error", onConfirm, onCancel }: any) {
   if (!open) return null;
   
@@ -233,15 +241,17 @@ function AlertDialog({ open, title, content, type = "error", onConfirm, onCancel
         animate={{ opacity: 1, scale: 1 }} 
         className="w-full max-w-[320px] bg-[#F0F4EF] dark:bg-[#202522] rounded-[28px] p-6 shadow-2xl flex flex-col items-center text-center space-y-4 relative"
       >
+        {/* 右上角关闭按钮，直接使用转义后的大写组件名 */}
         {isConfirm && (
           <div className="absolute top-2 right-2 text-gray-500 dark:text-gray-400">
-            <md-icon-button onClick={onCancel}>
-              <md-icon>close</md-icon>
-            </md-icon-button>
+            <MdIconButton onClick={onCancel}>
+              <MdIcon>close</MdIcon>
+            </MdIconButton>
           </div>
         )}
 
-        <md-fab 
+        {/* 顶部 MD3 FAB 图标 */}
+        <MdFab 
           lowered="true"
           className={`shadow-none ${bgColor} ${iconColor}`}
           style={{
@@ -250,8 +260,8 @@ function AlertDialog({ open, title, content, type = "error", onConfirm, onCancel
             'pointerEvents': 'none'
           } as React.CSSProperties}
         >
-          <md-icon slot="icon">{isError ? "error" : "check_circle"}</md-icon>
-        </md-fab>
+          <MdIcon slot="icon">{isError ? "error" : "check_circle"}</MdIcon>
+        </MdFab>
 
         <div>
           <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{title}</h3>
@@ -259,18 +269,20 @@ function AlertDialog({ open, title, content, type = "error", onConfirm, onCancel
         </div>
         
         <div className="flex w-full gap-3 mt-2">
+          {/* 取消按钮 */}
           {isConfirm && (
             <button 
               onClick={onCancel}
               className="relative flex-1 py-3 rounded-full font-bold text-sm bg-gray-200 dark:bg-[#111318] text-gray-700 dark:text-gray-300 overflow-hidden"
             >
-              <md-ripple></md-ripple>
+              <MdRipple></MdRipple>
               取消
             </button>
           )}
 
+          {/* 确认/主按钮 */}
           <div className="flex-1 flex">
-            <md-filled-button 
+            <MdFilledButton 
               onClick={onConfirm}
               style={{
                 width: '100%',
@@ -282,13 +294,14 @@ function AlertDialog({ open, title, content, type = "error", onConfirm, onCancel
               } as React.CSSProperties}
             >
               {isConfirm ? "確認" : (isError ? "重試" : "好的")}
-            </md-filled-button>
+            </MdFilledButton>
           </div>
         </div>
       </motion.div>
     </div>
   );
 }
+
 // 登录界面
 function LoginView({ setAuth, setIsFirstLogin }: any) {
   const [pwd, setPwd] = useState("");
