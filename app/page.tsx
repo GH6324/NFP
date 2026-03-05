@@ -1858,49 +1858,38 @@ interface DialogState {
   onConfirm: () => void;
   onCancel?: () => void; // 可选属性，解决 TS 报错的关键
 }
-function MeView({ setThemeKey, themeKey, setAuth, api, fetchAllData, THEMES }: any) {
+function MeView({ setThemeKey, themeKey, setAuth, api, fetchAllData }: any) {
+  // 注意：删除了 Props 里的 THEMES，直接使用全局作用域中的 THEMES 变量
+  
   const [pwd, setPwd] = useState("");
   const [confirmPwd, setConfirmPwd] = useState("");
 
-  // 修复：显式指定泛型 <DialogState>，让 TS 知道 onCancel 是可选的
+  // 弹窗状态
   const [dialog, setDialog] = useState<DialogState>({
-    open: false, 
-    title: "", 
-    content: "", 
-    type: "success", 
-    onConfirm: () => {}, 
-    // onCancel 这里可以不写，或者写 undefined
+    open: false, title: "", content: "", type: "success", onConfirm: () => {}
   });
 
   const closeDialog = () => setDialog(prev => ({ ...prev, open: false }));
 
-  // --- 逻辑处理 ---
-
+  // --- 1. 密码修改逻辑 ---
   const handlePasswordChange = async () => {
-    // 修复：现在不传 onCancel 也不会报错了
-    if (pwd.length < 6) {
-      return setDialog({ open: true, title: "密碼太短", content: "密碼長度不能少於 6 位", type: "error", onConfirm: closeDialog });
-    }
-    if (pwd !== confirmPwd) {
-      return setDialog({ open: true, title: "密碼不一致", content: "兩次輸入的密碼不匹配", type: "error", onConfirm: closeDialog });
-    }
+    if (pwd.length < 6) return setDialog({ open: true, title: "密碼太短", content: "密碼長度不能少於 6 位", type: "error", onConfirm: closeDialog });
+    if (pwd !== confirmPwd) return setDialog({ open: true, title: "密碼不一致", content: "兩次輸入的密碼不匹配", type: "error", onConfirm: closeDialog });
     
     try {
       const res = await api("CHANGE_PASSWORD", { newPassword: pwd });
       setAuth(res.token);
       localStorage.setItem("aero_auth", res.token);
       setDialog({ 
-        open: true, 
-        title: "修改成功", 
-        content: "密碼已更新，請使用新密碼登錄", 
-        type: "success", 
+        open: true, title: "修改成功", content: "密碼已更新，請使用新密碼登錄", type: "success", 
         onConfirm: () => { closeDialog(); setPwd(""); setConfirmPwd(""); } 
       });
-    } catch (e) {
-      setDialog({ open: true, title: "修改失敗", content: "網絡錯誤或請求被拒絕", type: "error", onConfirm: closeDialog });
+    } catch {
+      setDialog({ open: true, title: "修改失敗", content: "無法連接到服務器", type: "error", onConfirm: closeDialog });
     }
   };
 
+  // --- 2. 导出逻辑 ---
   const handleExport = async () => {
     const data = await api("EXPORT_ALL");
     const a = document.createElement('a');
@@ -1909,17 +1898,18 @@ function MeView({ setThemeKey, themeKey, setAuth, api, fetchAllData, THEMES }: a
     a.click();
   };
 
+  // --- 3. 导入逻辑 (带二次确认) ---
   const handleImportTrigger = (e: any) => {
     const file = e.target.files[0];
     if (!file) return;
-    e.target.value = null; 
+    e.target.value = null; // 重置 input
 
     setDialog({
       open: true, 
       title: "危險操作", 
       content: "導入操作將覆蓋現有所有配置，且無法撤銷。確定要繼續嗎？", 
       type: "error",
-      onCancel: closeDialog, // 这里传入了 onCancel，会触发双按钮模式
+      onCancel: closeDialog, // 触发双按钮
       onConfirm: () => {
         closeDialog();
         const reader = new FileReader();
@@ -1937,6 +1927,7 @@ function MeView({ setThemeKey, themeKey, setAuth, api, fetchAllData, THEMES }: a
     });
   };
 
+  // --- 4. 退出逻辑 (带二次确认) ---
   const handleLogout = () => {
     setDialog({
       open: true, 
@@ -1956,8 +1947,8 @@ function MeView({ setThemeKey, themeKey, setAuth, api, fetchAllData, THEMES }: a
     <>
       <div className="space-y-6">
         
-        {/* 1. 密码修改 */}
-        <div className="bg-[#F0F4EF] dark:bg-[#202522] p-6 rounded-[32px] space-y-4">
+        {/* 密码修改卡片 */}
+        <div className="bg-[#F0F4EF] dark:bg-[#202522] p-6 rounded-[32px] space-y-4 shadow-sm">
           <h3 className="font-bold flex items-center gap-2 text-[var(--md-sys-color-on-surface)]">
             <KeyRound className="w-5 h-5 text-[var(--md-sys-color-primary)]"/> 登錄密碼修改
           </h3>
@@ -1973,8 +1964,8 @@ function MeView({ setThemeKey, themeKey, setAuth, api, fetchAllData, THEMES }: a
           </div>
         </div>
 
-        {/* 2. 备份还原 */}
-        <div className="bg-[#F0F4EF] dark:bg-[#202522] p-6 rounded-[32px] space-y-4">
+        {/* 备份还原卡片 */}
+        <div className="bg-[#F0F4EF] dark:bg-[#202522] p-6 rounded-[32px] space-y-4 shadow-sm">
           <h3 className="font-bold flex items-center gap-2 text-[var(--md-sys-color-on-surface)]">
             <Save className="w-5 h-5 text-[var(--md-sys-color-primary)]"/> 備份與還原
           </h3>
@@ -1995,13 +1986,15 @@ function MeView({ setThemeKey, themeKey, setAuth, api, fetchAllData, THEMES }: a
           </div>
         </div>
 
-        {/* 3. 主题配色 */}
-        <div className="bg-[#F0F4EF] dark:bg-[#202522] p-6 rounded-[32px] space-y-4">
+        {/* 主题配色卡片 (已修复 THEMES 引用) */}
+        <div className="bg-[#F0F4EF] dark:bg-[#202522] p-6 rounded-[32px] space-y-4 shadow-sm">
           <h3 className="font-bold flex items-center gap-2 text-[var(--md-sys-color-on-surface)]">
             <Palette className="w-5 h-5 text-[var(--md-sys-color-primary)]"/> 面板主題配色
           </h3>
+          {/* 直接访问全局 THEMES 变量，兼容原代码逻辑 */}
           <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
-            {THEMES && Object.entries(THEMES).map(([key, colors]: any) => (
+            {/* @ts-ignore: 防止 THEMES 在这里未定义的类型报错，运行时会正常读取全局变量 */}
+            {typeof THEMES !== 'undefined' && Object.entries(THEMES).map(([key, colors]: any) => (
               <div 
                 key={key} 
                 onClick={() => setThemeKey(key)} 
@@ -2011,7 +2004,7 @@ function MeView({ setThemeKey, themeKey, setAuth, api, fetchAllData, THEMES }: a
                 `}
                 style={{ backgroundColor: colors.primary, borderColor: colors.primaryContainer }}
               >
-                {/* 波纹效果 */}
+                {/* 核心修复：嵌入 MdRipple 实现波纹效果，但不影响原有颜色样式 */}
                 {/* @ts-ignore */}
                 <MdRipple />
                 
@@ -2025,10 +2018,10 @@ function MeView({ setThemeKey, themeKey, setAuth, api, fetchAllData, THEMES }: a
           </div>
         </div>
 
-        {/* 4. 退出登录 */}
-        <div className="pt-2">
+        {/* 退出登录按钮 */}
+        <div className="pt-2 pb-4">
           {/* @ts-ignore */}
-          <MdFilledButton onClick={handleLogout} style={{width: '100%', '--md-sys-color-primary': '#ef4444', '--md-sys-color-on-primary': '#ffffff'}}>
+          <MdFilledButton onClick={handleLogout} style={{width: '100%', '--md-sys-color-primary': '#b91c1c', '--md-sys-color-on-primary': '#ffffff'}}>
             <LogOut slot="icon" className="w-4 h-4" /> 退出登錄
           </MdFilledButton>
         </div>
