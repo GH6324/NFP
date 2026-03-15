@@ -168,28 +168,24 @@ export default function App() {
 function NavItem({ icon, label, active, onClick }: any) {
  return (
   <motion.button
-   // 【性能优化】移除了极其消耗性能的 layout 属性。改用纯 GPU 加速的 Transform 实现，大幅提升帧率
-   whileTap={{ scale: 0.95 }} // 整个按钮点击时的微缩反馈
+   layout // 启用布局动画，确保文字出现时容器平滑调整尺寸
+   // 【优化点1】：使用 variants 代理点击事件，使得内外元素能同时响应点击动作
+   whileTap="tap"
+   variants={{ tap: { scale: 0.95 } }} // 保持原来的点击微缩反馈
    onClick={}
-   // 保持你设定的固定高度 h-[72px]，去除 gap-1 防止受 flex 影响
-   className="flex flex-col items-center justify-center flex-1 relative outline-none h-[72px]"
+   className="flex flex-col items-center justify-center flex-1 gap-1 relative outline-none py-2 h-[72px]"
   >
-   {/* 图标容器：添加 overflow-hidden 以约束内部涟漪不溢出胶囊，同时用 y 轴平移代替原来的布局挤压 */}
-   <motion.div
-    // 【性能优化】通过 Y 轴平移来实现向上浮动，避免了重排 (Reflow)，完全解决掉帧问题
-    animate={{ y: active ? -8 : 0 }}
-    transition={{ type: "spring", stiffness: 400, damping: 30 }}
-    className="relative px-5 py-1 flex items-center justify-center rounded-full overflow-hidden"
-   >
+   {/* 图标容器：增加 overflow-hidden 以便完美裁切内部的 MD3 涟漪 */}
+   <div className="relative px-5 py-1 flex items-center justify-center rounded-full overflow-hidden">
      
-    {/* 1. 激活背景 (胶囊状波纹) */}
+    {/* 1. 激活背景 (MD3 胶囊状波纹) */}
     <AnimatePresence>
      {active && (
       <motion.div
-       layoutId="nav-item-active-indicator" // 跨按钮滑动效果
-       initial={{ opacity: 0, scale: 0.5 }} // 初始状态：透明且缩小
-       animate={{ opacity: 1, scale: 1 }}  // 激活状态：完全显示且填充
-       exit={{ opacity: 0, scale: 0.5 }}  // 退出状态：缩小并消失
+       layoutId="nav-item-active-indicator" // 跨按钮的滑动效果
+       initial={{ opacity: 0, scale: 0.5 }} 
+       animate={{ opacity: 1, scale: 1 }}  
+       exit={{ opacity: 0, scale: 0.5 }}  
        transition={{ 
         type: "spring", 
         stiffness: 400, 
@@ -200,20 +196,21 @@ function NavItem({ icon, label, active, onClick }: any) {
      )}
     </AnimatePresence>
 
-    {/* 【新增】MD3 专属按钮内部涟漪动画肌理 (Ripple) */}
+    {/* --- 2. 【新增】：MD3 特有的内部涟漪 (State Layer) 肌理 --- */}
+    {/* 居中放置一个隐形的圆，按下时使用纯 GPU 加速放大，由父级的 overflow-hidden 裁切，完美模拟原生安卓水波纹 */}
     <motion.div
-     initial={{ opacity: 0, scale: 0.5 }}
-     // 点击时透明度加深、向外急剧扩散，模拟 Material You 涟漪
-     whileTap={{ opacity: 0.15, scale: 2.5 }} 
-     transition={{ duration: 0.3, ease: "easeOut" }}
-     // bg-current 会自动继承当前文字的颜色，完美兼容你的动态采色机制
-     className="absolute inset-0 bg-current rounded-full pointer-events-none z-10 origin-center"
+     variants={{ tap: { scale: 3.5, opacity: 0.12 } }}
+     initial={{ scale: 0, opacity: 0 }}
+     transition={{ duration: 0.4, ease: "easeOut" }}
+     className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full pointer-events-none z-0 ${
+      active ? 'bg-[var(--md-on-primary-container)]' : 'bg-gray-500'
+     }`}
     />
 
-    {/* 2. 图标层 */}
-    {/* z-20 确保图标始终位于背景和涟漪之上 */}
+    {/* 3. 图标层 */}
+    {/* z-10 确保图标始终位于背景和涟漪之上 */}
     <span 
-     className={`relative z-20 transition-colors duration-200 ${
+     className={`relative z-10 transition-colors duration-200 ${
       active 
        ? 'text-[var(--md-on-primary-container)]' // 激活时：取主容器上的对比色
        : 'text-gray-500'             // 未激活时：灰色
@@ -221,19 +218,20 @@ function NavItem({ icon, label, active, onClick }: any) {
     >
      {}
     </span>
-   </motion.div>
+   </div>
 
-   {/* 3. 文字标签 (仅在激活时出现) */}
+   {/* 4. 文字标签 (仅在激活时出现) */}
    <AnimatePresence>
     {active && (
      <motion.span
-      // 【性能优化】将 height 的变化改为 absolute 定位 + 缩放位移，彻底消除布局抖动
-      initial={{ opacity: 0, y: 10, scale: 0.8 }} // 初始：隐形、向下偏移、稍微缩小
-      animate={{ opacity: 1, y: 0, scale: 1 }}  // 激活：浮现、回正
-      exit={{ opacity: 0, y: 10, scale: 0.8 }}  // 退出：下沉消失
-      transition={{ duration: 0.2, delay: 0.05 }} // 稍微延迟，让胶囊先动
-      // 绝对定位在底部，不参与 flex 空间的挤压
-      className="absolute bottom-[10px] text-[12px] font-bold text-[var(--md-primary)] whitespace-nowrap pointer-events-none"
+      // --- 【优化点2】：核心性能优化 ---
+      // 彻底抛弃导致掉帧的 `height: 0 -> auto`
+      // 改用纯 GPU 加速的 y 轴位移和透明度。外层 button 的 `layout` 会自动接管排版，平滑推上图标！
+      initial={{ opacity: 0, y: 10 }} 
+      animate={{ opacity: 1, y: 0 }} 
+      exit={{ opacity: 0, y: 10 }}  
+      transition={{ duration: 0.2, delay: 0.05 }} 
+      className="text-[12px] font-bold text-[var(--md-primary)] overflow-hidden whitespace-nowrap"
      >
       {}
      </motion.span>
@@ -242,7 +240,6 @@ function NavItem({ icon, label, active, onClick }: any) {
   </motion.button>
  );
 }
-
 // 通用 MD3 风格弹窗组件
 
 
