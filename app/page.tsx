@@ -31,200 +31,201 @@ const MdFab = 'md-fab' as any;
 const MdRipple = 'md-ripple' as any;
 const MdFilledTonalButton: any = "md-filled-tonal-button";
 const MdElevatedButton: any = "md-elevated-button";
-
+//基本页面框架与处理逻辑
 export default function App() {
-  const [auth, setAuth] = useState<string | null>(null);
-  const [isFirstLogin, setIsFirstLogin] = useState(false);
-  const [tab, setTab] = useState<"home" | "rules" | "nodes" | "me">("home");
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
-  const[themeKey, setThemeKey] = useState<keyof typeof THEMES>("emerald");
+ const [auth, setAuth] = useState<string | null>(null);
+ const [isFirstLogin, setIsFirstLogin] = useState(false);
+ const [tab, setTab] = useState<"home" | "rules" | "nodes" | "me">("home");
+ const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
+ const [themeKey, setThemeKey] = useState<keyof typeof THEMES>("emerald");
   
-  const [nodes, setNodes] = useState<any[]>([]);
-  const [allRules, setAllRules] = useState<Record<string, any[]>>({});
+ const [nodes, setNodes] = useState<any[]>([]);
+ const [allRules, setAllRules] = useState<Record<string, any[]>>({});
   
-  const [isActive, setIsActive] = useState(true);
-  const idleTimer = useRef<any>(null);
+ const [isActive, setIsActive] = useState(true);
+ const idleTimer = useRef<any>(null);
 
-  useEffect(() => {
-    const token = localStorage.getItem("aero_auth");
-    if (token) setAuth(token);
-    if (localStorage.getItem("aero_theme") === "light") setIsDarkMode(false);
-    const savedColor = localStorage.getItem("aero_color") as keyof typeof THEMES;
-    if (savedColor && THEMES[savedColor]) setThemeKey(savedColor);
+ useEffect(() => {
+  const token = localStorage.getItem("aero_auth");
+  if (token) setAuth(token);
+  if (localStorage.getItem("aero_theme") === "light") setIsDarkMode(false);
+  const savedColor = localStorage.getItem("aero_color") as keyof typeof THEMES;
+  if (savedColor && THEMES[savedColor]) setThemeKey(savedColor);
 
-    const resetIdle = () => {
-      setIsActive(true);
-      clearTimeout(idleTimer.current);
-      idleTimer.current = setTimeout(() => setIsActive(false), 60000);
-    };
-    window.addEventListener("mousemove", resetIdle);
-    window.addEventListener("touchstart", resetIdle);
-    resetIdle();
-    return () => { 
-      window.removeEventListener("mousemove", resetIdle); 
-      window.removeEventListener("touchstart", resetIdle); 
-    };
-  },[]);
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", isDarkMode);
-    localStorage.setItem("aero_theme", isDarkMode ? "dark" : "light");
-  },[isDarkMode]);
-
-  useEffect(() => {
-    const root = document.documentElement;
-    const t = THEMES[themeKey];
-    root.style.setProperty("--md-primary", t.primary);
-    root.style.setProperty("--md-on-primary", t.onPrimary);
-    root.style.setProperty("--md-primary-container", t.primaryContainer);
-    root.style.setProperty("--md-on-primary-container", t.onPrimaryContainer);
-    localStorage.setItem("aero_color", themeKey);
-  }, [themeKey]);
-
-  useEffect(() => {
-    if (auth && isActive && !isFirstLogin) {
-      fetchAllData();
-      const interval = setInterval(() => {
-        fetchAllData();
-        api("KEEP_ALIVE"); 
-      }, 5000);
-      return () => clearInterval(interval);
-    }
-  }, [auth, isActive, isFirstLogin]);
-
-  const api = async (action: string, data: any = {}) => {
-    try {
-      return (await axios.post("/api", { action, auth, ...data })).data;
-    } catch (err: any) {
-      if (err.response?.status === 401) {
-        setAuth(null);
-        localStorage.removeItem("aero_auth");
-      }
-      throw err;
-    }
+  const resetIdle = () => {
+   setIsActive(true);
+   clearTimeout(idleTimer.current);
+   idleTimer.current = setTimeout(() => setIsActive(false), 60000);
   };
-
-  const fetchAllData = async () => {
-    try {
-      const fetchedNodes = await api("GET_NODES");
-      const nodesArray = Object.values(fetchedNodes);
-      setNodes(nodesArray);
-      
-      const rulesMap: any = {};
-      for (const n of nodesArray as any[]) {
-        rulesMap[n.id] = await api("GET_RULES", { nodeId: n.id });
-      }
-      setAllRules(rulesMap);
-    } catch (e) { console.error(e); }
+  window.addEventListener("mousemove", resetIdle);
+  window.addEventListener("touchstart", resetIdle);
+  resetIdle();
+  return () => { 
+   window.removeEventListener("mousemove", resetIdle); 
+   window.removeEventListener("touchstart", resetIdle); 
   };
+ }, []);
 
-  if (!auth) return <LoginView setAuth={setAuth} setIsFirstLogin={setIsFirstLogin} />;
+ useEffect(() => {
+  document.documentElement.classList.toggle("dark", isDarkMode);
+  localStorage.setItem("aero_theme", isDarkMode ? "dark" : "light");
+ }, [isDarkMode]);
 
-  return (
-    <div className="min-h-screen bg-[#FBFDF8] dark:bg-[#111318] text-[#191C1A] dark:text-[#E2E2E5] pb-24 font-sans transition-colors duration-300 overflow-x-hidden">
-      <AnimatePresence>
-        {isFirstLogin && <ForcePasswordChange api={api} setAuth={setAuth} onComplete={() => setIsFirstLogin(false)} />}
-      </AnimatePresence>
+ useEffect(() => {
+  const root = document.documentElement;
+  const t = THEMES[themeKey];
+  root.style.setProperty("--md-primary", t.primary);
+  root.style.setProperty("--md-on-primary", t.onPrimary);
+  root.style.setProperty("--md-primary-container", t.primaryContainer);
+  root.style.setProperty("--md-on-primary-container", t.onPrimaryContainer);
+  localStorage.setItem("aero_color", themeKey);
+ }, [themeKey]);
 
-      <header className="px-6 py-5 flex justify-between items-center sticky top-0 z-10 bg-[#FBFDF8]/80 dark:bg-[#111318]/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-white/5">
-        <motion.div className="flex items-center gap-3" whileTap={{ scale: 0.95 }}>
-          <div className="p-2 rounded-full" style={{ backgroundColor: 'var(--md-primary-container)', color: 'var(--md-on-primary-container)' }}>
-            <Shield className="w-6 h-6" />
-          </div>
-          <h1 className="text-xl font-bold tracking-tight">AeroNode</h1>
-        </motion.div>
-        <motion.button whileTap={{ scale: 0.8 }} onClick={() => setIsDarkMode(!isDarkMode)} className="p-2.5 rounded-full bg-[#F0F4EF] dark:bg-[#202522]">
-          {isDarkMode ? "🌞" : "🌙"}
-        </motion.button>
-      </header>
+ useEffect(() => {
+  if (auth && isActive && !isFirstLogin) {
+   fetchAllData();
+   const interval = setInterval(() => {
+    fetchAllData();
+    api("KEEP_ALIVE"); 
+   }, 5000);
+   return () => clearInterval(interval);
+  }
+ }, [auth, isActive, isFirstLogin]);
 
-      {!isActive && (
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mx-4 mt-4 p-3 rounded-2xl bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 flex items-center justify-center gap-2 text-sm font-bold cursor-pointer" onClick={() => setIsActive(true)}>
-          <PauseCircle className="w-5 h-5" /> 點擊恢復實時狀態更新
-        </motion.div>
-      )}
+ const api = async (action: string, data: any = {}) => {
+  try {
+   return (await axios.post("/api", { action, auth, ...data })).data;
+  } catch (err: any) {
+   if (err.response?.status === 401) {
+    setAuth(null);
+    localStorage.removeItem("aero_auth");
+   }
+   throw err;
+  }
+ };
 
-      <main className="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
-        <AnimatePresence mode="wait">
-          <motion.div key={tab} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }}>
-            {tab === "home" && <DashboardView nodes={nodes} allRules={allRules} />}
-            {tab === "nodes" && <NodesView nodes={nodes} fetchAllData={fetchAllData} api={api} />}
-            {tab === "rules" && <RulesView nodes={nodes} allRules={allRules} fetchAllData={fetchAllData} api={api} />}
-            {tab === "me" && <MeView api={api} setAuth={setAuth} themeKey={themeKey} setThemeKey={setThemeKey} fetchAllData={fetchAllData} />}
-          </motion.div>
-        </AnimatePresence>
-      </main>
+ const fetchAllData = async () => {
+  try {
+   const fetchedNodes = await api("GET_NODES");
+   const nodesArray = Object.values(fetchedNodes);
+   setNodes(nodesArray);
+    
+   const rulesMap: any = {};
+   for (const n of nodesArray as any[]) {
+    rulesMap[n.id] = await api("GET_RULES", { nodeId: n.id });
+   }
+   setAllRules(rulesMap);
+  } catch (e) { console.error(e); }
+ };
 
-      <nav className="fixed bottom-0 w-full bg-[#F4F8F4] dark:bg-[#191C1A] border-t border-gray-200/50 dark:border-white/5 px-2 py-2 flex justify-around items-center z-50 safe-area-pb">
-        <NavItem icon={<Home className="w-6 h-6"/>} label="首頁" active={tab==="home"} onClick={()=>setTab("home")} />
-        <NavItem icon={<Network className="w-6 h-6"/>} label="轉發" active={tab==="rules"} onClick={()=>setTab("rules")} />
-        <NavItem icon={<Server className="w-6 h-6"/>} label="節點" active={tab==="nodes"} onClick={()=>setTab("nodes")} />
-        <NavItem icon={<User className="w-6 h-6"/>} label="設定" active={tab==="me"} onClick={()=>setTab("me")} />
-      </nav>
-    </div>
-  );
+ if (!auth) return <LoginView setAuth={} setIsFirstLogin={} />;
+
+ return (
+  <div className="min-h-screen bg-[#FBFDF8] dark:bg-[#111318] text-[#191C1A] dark:text-[#E2E2E5] pb-24 font-sans transition-colors duration-300 overflow-x-hidden">
+   <AnimatePresence>
+    {isFirstLogin && <ForcePasswordChange api={} setAuth={} onComplete={() => setIsFirstLogin(false)} />}
+   </AnimatePresence>
+
+   <header className="px-6 py-5 flex justify-between items-center sticky top-0 z-10 bg-[#FBFDF8]/80 dark:bg-[#111318]/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-white/5">
+    <motion.div className="flex items-center gap-3" whileTap={{ scale: 0.95 }}>
+     <div className="p-2 rounded-full" style={{ backgroundColor: 'var(--md-primary-container)', color: 'var(--md-on-primary-container)' }}>
+      <Shield className="w-6 h-6" />
+     </div>
+     <h1 className="text-xl font-bold tracking-tight">AeroNode</h1>
+    </motion.div>
+    <motion.button whileTap={{ scale: 0.8 }} onClick={() => setIsDarkMode(!isDarkMode)} className="p-2.5 rounded-full bg-[#F0F4EF] dark:bg-[#202522]">
+     {isDarkMode ? "🌞" : "🌙"}
+    </motion.button>
+   </header>
+
+   {!isActive && (
+    <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mx-4 mt-4 p-3 rounded-2xl bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 flex items-center justify-center gap-2 text-sm font-bold cursor-pointer" onClick={() => setIsActive(true)}>
+     <PauseCircle className="w-5 h-5" /> 點擊恢復實時狀態更新
+    </motion.div>
+   )}
+
+   <main className="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
+    <AnimatePresence mode="wait">
+     <motion.div key={} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }}>
+      {tab === "home" && <DashboardView nodes={} allRules={} />}
+      {tab === "nodes" && <NodesView nodes={} fetchAllData={} api={} />}
+      {tab === "rules" && <RulesView nodes={} allRules={} fetchAllData={} api={} />}
+      {tab === "me" && <MeView api={} setAuth={} themeKey={} setThemeKey={} fetchAllData={} />}
+     </motion.div>
+    </AnimatePresence>
+   </main>
+
+   <nav className="fixed bottom-0 w-full bg-[#F4F8F4] dark:bg-[#191C1A] border-t border-gray-200/50 dark:border-white/5 px-2 py-2 flex justify-around items-center z-50 safe-area-pb">
+    <NavItem icon={<Home className="w-6 h-6"/>} label="首頁" active={tab==="home"} onClick={()=>setTab("home")} />
+    <NavItem icon={<Network className="w-6 h-6"/>} label="轉發" active={tab==="rules"} onClick={()=>setTab("rules")} />
+    <NavItem icon={<Server className="w-6 h-6"/>} label="節點" active={tab==="nodes"} onClick={()=>setTab("nodes")} />
+    <NavItem icon={<User className="w-6 h-6"/>} label="設定" active={tab==="me"} onClick={()=>setTab("me")} />
+   </nav>
+  </div>
+ );
 }
+
 //底部导航栏按钮动画逻辑实现
 function NavItem({ icon, label, active, onClick }: any) {
-  return (
-    <motion.button
-      layout // 启用布局动画，确保文字出现时容器平滑调整尺寸
-      whileTap={{ scale: 0.95 }} // 点击时的微缩反馈
-      onClick={onClick}
-      className="flex flex-col items-center justify-center flex-1 gap-1 relative outline-none py-2"
+ return (
+  <motion.button
+   layout // 启用布局动画，确保文字出现时容器平滑调整尺寸
+   whileTap={{ scale: 0.95 }} // 点击时的微缩反馈
+   onClick={}
+   // 【修改点】：追加了 h-[72px] 以固定每个 NavItem 的高度，防止底部栏忽高忽低
+   className="flex flex-col items-center justify-center flex-1 gap-1 relative outline-none py-2 h-[72px]"
+  >
+   {/* 图标容器：设置为 relative 以便放置绝对定位的背景 */}
+   <div className="relative px-5 py-1 flex items-center justify-center">
+     
+    {/* 1. 激活背景 (胶囊状波纹) */}
+    <AnimatePresence>
+     {active && (
+      <motion.div
+       layoutId="nav-item-active-indicator" // 如果有多个NavItem，这能实现跨按钮的滑动效果，单个使用也能保证平滑
+       initial={{ opacity: 0, scale: 0.5 }} // 初始状态：透明且缩小（模拟从中心开始）
+       animate={{ opacity: 1, scale: 1 }}  // 激活状态：完全显示且填充
+       exit={{ opacity: 0, scale: 0.5 }}  // 退出状态：缩小并消失
+       transition={{ 
+        type: "spring", 
+        stiffness: 400, 
+        damping: 30 
+       }} 
+       className="absolute inset-0 bg-[var(--md-primary-container)] rounded-full" 
+      />
+     )}
+    </AnimatePresence>
+
+    {/* 2. 图标层 */}
+    {/* z-10 确保图标始终位于背景之上 */}
+    <span 
+     className={`relative z-10 transition-colors duration-200 ${
+      active 
+       ? 'text-[var(--md-on-primary-container)]' // 激活时：取主容器上的对比色
+       : 'text-gray-500'             // 未激活时：灰色
+     }`}
     >
-      {/* 图标容器：设置为 relative 以便放置绝对定位的背景 */}
-      <div className="relative px-5 py-1 flex items-center justify-center">
-        
-        {/* 1. 激活背景 (胶囊状波纹) */}
-        <AnimatePresence>
-          {active && (
-            <motion.div
-              layoutId="nav-item-active-indicator" // 如果有多个NavItem，这能实现跨按钮的滑动效果，单个使用也能保证平滑
-              initial={{ opacity: 0, scale: 0.5 }} // 初始状态：透明且缩小（模拟从中心开始）
-              animate={{ opacity: 1, scale: 1 }}   // 激活状态：完全显示且填充
-              exit={{ opacity: 0, scale: 0.5 }}    // 退出状态：缩小并消失
-              transition={{ 
-                type: "spring", 
-                stiffness: 400, 
-                damping: 30 
-              }} 
-              className="absolute inset-0 bg-[var(--md-primary-container)] rounded-full" 
-            />
-          )}
-        </AnimatePresence>
+     {}
+    </span>
+   </div>
 
-        {/* 2. 图标层 */}
-        {/* z-10 确保图标始终位于背景之上 */}
-        <span 
-          className={`relative z-10 transition-colors duration-200 ${
-            active 
-              ? 'text-[var(--md-on-primary-container)]' // 激活时：取主容器上的对比色
-              : 'text-gray-500'                          // 未激活时：灰色
-          }`}
-        >
-          {icon}
-        </span>
-      </div>
-
-      {/* 3. 文字标签 (仅在激活时出现) */}
-      <AnimatePresence>
-        {active && (
-          <motion.span
-            initial={{ opacity: 0, y: 5, height: 0 }} // 初始：隐形、向下偏移、高度为0
-            animate={{ opacity: 1, y: 0, height: "auto" }} // 激活：浮现、回正
-            exit={{ opacity: 0, y: 5, height: 0 }}    // 退出：下沉消失
-            transition={{ duration: 0.2, delay: 0.05 }} // 稍微延迟，让背景先动
-            className="text-[12px] font-bold text-[var(--md-primary)] overflow-hidden whitespace-nowrap"
-          >
-            {label}
-          </motion.span>
-        )}
-      </AnimatePresence>
-    </motion.button>
-  );
+   {/* 3. 文字标签 (仅在激活时出现) */}
+   <AnimatePresence>
+    {active && (
+     <motion.span
+      initial={{ opacity: 0, y: 5, height: 0 }} // 初始：隐形、向下偏移、高度为0
+      animate={{ opacity: 1, y: 0, height: "auto" }} // 激活：浮现、回正
+      exit={{ opacity: 0, y: 5, height: 0 }}  // 退出：下沉消失
+      transition={{ duration: 0.2, delay: 0.05 }} // 稍微延迟，让背景先动
+      className="text-[12px] font-bold text-[var(--md-primary)] overflow-hidden whitespace-nowrap"
+     >
+      {}
+     </motion.span>
+    )}
+   </AnimatePresence>
+  </motion.button>
+ );
 }
-
 // 通用 MD3 风格弹窗组件
 
 
