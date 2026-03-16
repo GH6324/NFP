@@ -169,17 +169,16 @@ function NavItem({ icon, label, active, onClick }: any) {
  return (
   <motion.button
    layout // 启用布局动画，确保文字出现时容器平滑调整尺寸
-   whileTap={{ scale: 0.95 }} // 【保留原有逻辑】：点击时的微缩反馈
-   onClick={} // ⚠️ 请确保你的编辑器里这里是 onClick={}，绝不能是 {}
-   // 【添加 group】：用于触发内部的 CSS 涟漪
+   whileTap={{ scale: 0.95 }} // 点击时的微缩反馈
+   onClick={ onClick } 
    className="group flex flex-col items-center justify-center flex-1 gap-1 relative outline-none py-2 h-[72px]"
   >
-   {/* 图标容器：增加 overflow-hidden 以便完美裁切内部的 MD3 涟漪 */}
+   {/* 图标容器：增加 overflow-hidden 以便完美裁切内部的背景涟漪 */}
    <div className="relative px-5 py-1 flex items-center justify-center overflow-hidden rounded-full">
      
     {/* 1. 激活背景 (胶囊状波纹) */}
     <AnimatePresence>
-     {active && (
+     { active && (
       <motion.div
        layoutId="nav-item-active-indicator" // 如果有多个NavItem，这能实现跨按钮的滑动效果，单个使用也能保证平滑
        initial={{ opacity: 0, scale: 0.5 }} // 初始状态：透明且缩小（模拟从中心开始）
@@ -195,7 +194,7 @@ function NavItem({ icon, label, active, onClick }: any) {
      )}
     </AnimatePresence>
 
-    {/* 2. 【新增】：MD3 涟漪动画肌理 (纯 CSS 实现，不改变任何 JS 结构，保留动态采色) */}
+    {/* 2. 【MD3 涟漪优化】：纯 CSS 实现的按压反馈，保留动态采色 */}
     <div className={`absolute inset-0 rounded-full opacity-0 group-active:opacity-15 transition-opacity duration-200 z-0 ${
       active ? 'bg-[var(--md-on-primary-container)]' : 'bg-gray-500'
     }`} />
@@ -209,23 +208,22 @@ function NavItem({ icon, label, active, onClick }: any) {
        : 'text-gray-500'             // 未激活时：灰色
      }`}
     >
-     {} {/* ⚠️ 请确保这里是 {}，绝不能是 {} */}
+     { icon } 
     </span>
    </div>
 
    {/* 4. 文字标签 (仅在激活时出现) */}
    <AnimatePresence>
-    {active && (
+    { active && (
      <motion.span
-      // 【性能优化核心】：完全移除了导致掉帧的 height: 0 -> "auto" 动画
-      // 外层本身已有 layout 属性，文字通过透明度和 Y 轴位移出现时，父级会自动平滑推开高度！流畅度翻倍！
+      // 【核心性能提升】：彻底抛弃掉帧的 height 动画，改用纯 GPU 的 Y轴位移！流畅度翻倍！
       initial={{ opacity: 0, y: 5 }} 
       animate={{ opacity: 1, y: 0 }} 
       exit={{ opacity: 0, y: 5 }}  
       transition={{ duration: 0.2, delay: 0.05 }} 
       className="text-[12px] font-bold text-[var(--md-primary)] overflow-hidden whitespace-nowrap"
      >
-      {} {/* ⚠️ 请确保这里是 {}，绝不能是 {} */}
+      { label }
      </motion.span>
     )}
    </AnimatePresence>
