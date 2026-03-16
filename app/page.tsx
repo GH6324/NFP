@@ -169,23 +169,22 @@ function NavItem({ icon, label, active, onClick }: any) {
  return (
   <motion.button
    layout // 启用布局动画，确保文字出现时容器平滑调整尺寸
-   // 使用 variants 代理点击事件，使得内外元素能同时响应点击动作
-   whileTap="tap"
-   variants={{ tap: { scale: 0.95 } }} // 保持原来的点击微缩反馈
-   onClick={} // 【修复点】：这里必须是 onClick={}，绝对不能是 onClick={}
-   className="flex flex-col items-center justify-center flex-1 gap-1 relative outline-none py-2 h-[72px]"
+   whileTap={{ scale: 0.95 }} // 完美保留你原有的点击微缩反馈
+   onClick={} // 完美保留你原有的事件接口
+   // 【唯一的小改动】：在这里加了一个 group 属性，用于触发下方的 CSS 涟漪
+   className="group flex flex-col items-center justify-center flex-1 gap-1 relative outline-none py-2 h-[72px]"
   >
-   {/* 图标容器：增加 overflow-hidden 以便完美裁切内部的 MD3 涟漪 */}
-   <div className="relative px-5 py-1 flex items-center justify-center rounded-full overflow-hidden">
+   {/* 图标容器：增加 overflow-hidden 以完美裁切内部的背景涟漪 */}
+   <div className="relative px-5 py-1 flex items-center justify-center overflow-hidden rounded-full">
      
-    {/* 1. 激活背景 (MD3 胶囊状波纹) */}
+    {/* 1. 激活背景 (胶囊状波纹) */}
     <AnimatePresence>
      {active && (
       <motion.div
-       layoutId="nav-item-active-indicator" // 跨按钮的滑动效果
-       initial={{ opacity: 0, scale: 0.5 }} 
-       animate={{ opacity: 1, scale: 1 }}  
-       exit={{ opacity: 0, scale: 0.5 }}  
+       layoutId="nav-item-active-indicator" // 如果有多个NavItem，这能实现跨按钮的滑动效果，单个使用也能保证平滑
+       initial={{ opacity: 0, scale: 0.5 }} // 初始状态：透明且缩小（模拟从中心开始）
+       animate={{ opacity: 1, scale: 1 }}  // 激活状态：完全显示且填充
+       exit={{ opacity: 0, scale: 0.5 }}  // 退出状态：缩小并消失
        transition={{ 
         type: "spring", 
         stiffness: 400, 
@@ -196,19 +195,15 @@ function NavItem({ icon, label, active, onClick }: any) {
      )}
     </AnimatePresence>
 
-    {/* --- 2. MD3 特有的内部涟漪 (State Layer) 肌理 --- */}
-    {/* 居中放置一个隐形的圆，按下时使用纯 GPU 加速放大，由父级的 overflow-hidden 裁切，完美模拟原生安卓水波纹 */}
-    <motion.div
-     variants={{ tap: { scale: 3.5, opacity: 0.12 } }}
-     initial={{ scale: 0, opacity: 0 }}
-     transition={{ duration: 0.4, ease: "easeOut" }}
-     className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full pointer-events-none z-0 ${
+    {/* 2. 【MD3 特有肌理优化】：纯 CSS 状态涟漪层 (State Layer) 
+        不再使用可能导致编译器报错的 variants 逻辑，完全靠 Tailwind 触发响应
+        保持了你的动态取色机制不变！ */}
+    <div className={`absolute inset-0 rounded-full opacity-0 group-active:opacity-15 transition-opacity duration-200 z-0 ${
       active ? 'bg-[var(--md-on-primary-container)]' : 'bg-gray-500'
-     }`}
-    />
+    }`} />
 
     {/* 3. 图标层 */}
-    {/* z-10 确保图标始终位于背景和涟漪之上 */}
+    {/* z-10 确保图标始终位于背景之上 */}
     <span 
      className={`relative z-10 transition-colors duration-200 ${
       active 
@@ -224,7 +219,8 @@ function NavItem({ icon, label, active, onClick }: any) {
    <AnimatePresence>
     {active && (
      <motion.span
-      // 核心性能优化：抛弃导致掉帧的 height 动画，改用纯 GPU 加速的 y 轴位移和透明度
+      // 【核心性能优化】：彻底删除导致掉帧的 height: 0 -> "auto" 动画。
+      // 外层 button 已经有 layout 属性，文字靠 y 轴位移和透明度消失时，父容器会自动平滑处理高度回弹！
       initial={{ opacity: 0, y: 10 }} 
       animate={{ opacity: 1, y: 0 }} 
       exit={{ opacity: 0, y: 10 }}  
