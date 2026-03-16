@@ -164,26 +164,25 @@ export default function App() {
     </div>
   );
 }
-//底部导航栏按钮动画逻辑实现
+// 底部导航栏按钮动画逻辑实现  GPU 硬件加速
 function NavItem({ icon, label, active, onClick }: any) {
- // 新增：用于记录点击次数，以触发纯正的不回缩涟漪
  const [pressCount, setPressCount] = useState(0);
 
  return (
   <motion.button
-   // 【极致性能优化1】：去掉会导致整个 Flex 容器重排掉帧的 layout 属性
-   // 全部改用纯 GPU 加速的绝对定位与 Transform 动画
-   whileTap={{ scale: 0.95 }} // 依然保留点击整体微缩反馈
+   whileTap={{ scale: 0.95 }} 
    onClick={ onClick } // 【防网页吞字符：加了空格】
-   onPointerDown={() => setPressCount(c => c + 1)} // 每次按下触发新涟漪
+   onPointerDown={() => setPressCount(c => c + 1)} 
    className="group flex flex-col items-center justify-center flex-1 relative outline-none h-[72px] cursor-pointer"
+   // 【优化1】：给整个按钮加上 transform 预热，防止 whileTap 缩放时掉帧
+   style={{ willChange: "transform" }}
   >
-   {/* 内部容器：容纳图标和背景 */}
    <motion.div
-    // 【核心非线性动画】：MD3 标准缓动 [0.2, 0, 0, 1]，激活时平滑上浮
     initial={false}
     animate={{ y: active ? -10 : 0 }} 
     transition={{ duration: 0.4, ease: [0.2, 0, 0, 1] }}
+    // 【优化2】：强制 GPU 独立图层，让 Y 轴浮动绕开 JS 主线程排版
+    style={{ willChange: "transform" }}
     className="relative px-5 py-1 flex items-center justify-center z-10"
    >
     {/* 1. 激活背景 (胶囊状波纹，跨按钮平移) */}
@@ -199,22 +198,26 @@ function NavItem({ icon, label, active, onClick }: any) {
         stiffness: 300,
         damping: 25
        }}
+       // 【优化3】：跨按钮平移最容易卡顿，强制分配独立 GPU 内存
+       style={{ willChange: "transform, opacity" }}
        className="absolute inset-0 bg-[var(--md-primary-container)] rounded-full z-0"
       />
      )}
     </AnimatePresence>
 
-    {/* 2. 【纯正 MD3 涟漪】：松手不收缩，放慢扩散，纯 GPU 绘制 */}
+    {/* 2. 【纯正 MD3 涟漪】：松手不收缩，放慢扩散 */}
     { pressCount > 0 && (
      <motion.div
-      key={ pressCount } // 每次点击更换 key，强制重新播放扩散动画
+      key={ pressCount } 
       initial={{ scale: 0.2, opacity: 0 }}
-      animate={{ scale: 2.5, opacity: [0, 0.12, 0] }} // 展开的同时逐渐变透明
+      animate={{ scale: 2.5, opacity: [0, 0.12, 0] }} 
       transition={{
-       duration: 0.8, // 放慢涟漪扩散速度
+       duration: 0.8, 
        ease: "easeOut",
-       times: [0, 0.2, 1] // 控制透明度：0%->20%时最亮，然后慢慢消散到 0
+       times: [0, 0.2, 1] 
       }}
+      // 【优化4】：极速生成涟漪层，消除触控按下瞬间的微小延迟
+      style={{ willChange: "transform, opacity" }}
       className={`absolute inset-0 rounded-full z-0 pointer-events-none ${
        active ? 'bg-[var(--md-on-primary-container)]' : 'bg-gray-500'
       }`}
@@ -234,16 +237,16 @@ function NavItem({ icon, label, active, onClick }: any) {
    </motion.div>
 
    {/* 4. 文字标签 (绝对定位) */}
-   {/* 【极致性能优化2】：脱离文档流绝对定位，完全不挤压图标引起重排！ */}
-   {/* 仅靠 GPU 处理 Y 轴位移和透明度，彻底解决手机 Chrome 掉帧问题 */}
    <motion.span
     initial={false}
     animate={{
      opacity: active ? 1 : 0,
-     y: active ? 14 : 20, // 激活时从图标下方浮起
+     y: active ? 14 : 20, 
      scale: active ? 1 : 0.85
     }}
-    transition={{ duration: 0.4, ease: [0.2, 0, 0, 1] }} // MD3 标准高级缓动曲线
+    transition={{ duration: 0.4, ease: [0.2, 0, 0, 1] }} 
+    // 【优化5】：文字透明度和位移双重 GPU 加速
+    style={{ willChange: "transform, opacity" }}
     className="absolute text-[12px] font-bold text-[var(--md-primary)] whitespace-nowrap pointer-events-none"
    >
     { label } {/* 【防网页吞字符：加了空格】 */}
